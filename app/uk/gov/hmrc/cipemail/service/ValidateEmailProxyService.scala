@@ -14,18 +14,19 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.cipemail.controllers
+package uk.gov.hmrc.cipemail.service
 
-import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
-import play.api.mvc.{Action, AnyContent, ControllerComponents}
-import javax.inject.{Inject, Singleton}
-import scala.concurrent.Future
+import play.libs.ws.{WSClient, WSResponse}
 
-@Singleton()
-class MicroserviceHelloWorldController @Inject()(cc: ControllerComponents)
-    extends BackendController(cc) {
+import java.util.concurrent.CompletionStage
+import javax.inject.Inject
 
-  def hello(): Action[AnyContent] = Action.async { implicit request =>
-    Future.successful(Ok("Hello world"))
+class ValidateEmailProxyService @Inject()(ws: WSClient) {
+
+  // TODO - PUT IN CONFIG FOR ACTUAL URL AND POST BODY
+  def callCipValidateEmailEndpoint(): CompletionStage[WSResponse] = {
+    val result: CompletionStage[WSResponse] = ws.url("http://example.com").post("content")
+    result
   }
+
 }
