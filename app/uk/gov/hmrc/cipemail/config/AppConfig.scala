@@ -25,6 +25,6 @@ class AppConfig @Inject()(config: Configuration, servicesConfig: ServicesConfig)
 
   lazy val appName: String = config.get[String](path = "appName")
 
-  lazy val cipEmailValidationUrl = s"${servicesConfig.baseUrl("cip-email-validation")}"
-  lazy val cipValidateEmail: String = s"$cipEmailValidationUrl${config.get[String]("urls.validate-email")}"
+  lazy val cipEmailValidationBaseUrl = s"${servicesConfig.baseUrl("cip-email-validation")}"
+  lazy val cipValidateEmailEndpoint: String = s"$cipEmailValidationBaseUrl${config.get[String]("urls.validate-email")}"
 }

@@ -17,15 +17,17 @@
 package uk.gov.hmrc.cipemail.service
 
 import play.libs.ws.{WSClient, WSResponse}
+import uk.gov.hmrc.cipemail.config.AppConfig
 
 import java.util.concurrent.CompletionStage
 import javax.inject.Inject
 
-class ValidateEmailProxyService @Inject()(ws: WSClient) {
+class ValidateEmailProxyService @Inject()(config: AppConfig,
+                                          ws: WSClient) {
 
-  // TODO - PUT IN CONFIG FOR ACTUAL URL AND POST BODY
+  // TODO - PUT IN CONFIG FOR ACTUAL POST BODY
   def callCipValidateEmailEndpoint(): CompletionStage[WSResponse] = {
-    val result: CompletionStage[WSResponse] = ws.url("http://example.com").post("content")
+    val result: CompletionStage[WSResponse] = ws.url(config.cipValidateEmailEndpoint).post("content")
     result
   }
 
