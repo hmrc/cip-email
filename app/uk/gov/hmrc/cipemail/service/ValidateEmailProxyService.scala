@@ -16,7 +16,9 @@
 
 package uk.gov.hmrc.cipemail.service
 
-import play.libs.ws.{WSClient, WSResponse}
+import play.api.libs.json.{JsValue, Json}
+import play.api.mvc.Request
+import play.libs.ws.{WSClient, WSRequest, WSResponse}
 import uk.gov.hmrc.cipemail.config.AppConfig
 
 import java.util.concurrent.CompletionStage
@@ -26,8 +28,18 @@ class ValidateEmailProxyService @Inject()(config: AppConfig,
                                           ws: WSClient) {
 
   // TODO - PUT IN CONFIG FOR ACTUAL POST BODY
-  def callCipValidateEmailEndpoint(): CompletionStage[WSResponse] = {
-    val result: CompletionStage[WSResponse] = ws.url(config.cipValidateEmailEndpoint).post("content")
+  def callCipValidateEmailEndpoint(request: Request[JsValue]): CompletionStage[WSResponse] = {
+
+    val incomingPayload: JsValue = request.body
+    val phoneNumberJsonStr = (incomingPayload \ "phoneNumber").as[String]
+
+    val requestToCip: WSRequest = ws.url(config.cipValidateEmailEndpoint).addHeader("Accept", "application/json")
+
+    val payload = Json.obj(
+      "phoneNumber" -> phoneNumberJsonStr
+    ).toString()
+
+    val result: CompletionStage[WSResponse] = requestToCip.post(payload)
     result
   }
 

@@ -41,7 +41,7 @@ class ValidateEmailProxyController @Inject()(cc: ControllerComponents,
 
   // TODO - ADD IN ERROR HANDLING
   def validateFormat(): Action[JsValue] = Action(parse.json).async { implicit request =>
-    val futureWrapper = scala.concurrent.Future { validateEmailProxyService.callCipValidateEmailEndpoint() }
+    val futureWrapper = scala.concurrent.Future { validateEmailProxyService.callCipValidateEmailEndpoint(request) }
     futureWrapper.map(i => Ok("Got result: " + i))
 
    /* validateEmailProxyService.callCipValidateEmailEndpoint().map {
