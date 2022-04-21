@@ -17,13 +17,15 @@
 package uk.gov.hmrc.cipemail.controllers
 
 import org.slf4j.LoggerFactory
-import play.api.libs.json.JsValue
-import play.api.mvc.{AbstractController, Action, ControllerComponents}
+import play.api.libs.json.{JsObject, JsValue, Json, __}
+import play.api.libs.ws.WSResponse
+import play.api.mvc.{AbstractController, Action, ControllerComponents, Result}
 import uk.gov.hmrc.cipemail.config.AppConfig
 import uk.gov.hmrc.cipemail.service.ValidateEmailProxyService
 
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.Future
 
 @Singleton
 class ValidateEmailProxyController @Inject()(cc: ControllerComponents,
@@ -42,13 +44,10 @@ class ValidateEmailProxyController @Inject()(cc: ControllerComponents,
   // TODO - ADD IN ERROR HANDLING
   def validateFormat(): Action[JsValue] = Action(parse.json).async { implicit request =>
     val futureWrapper = scala.concurrent.Future { validateEmailProxyService.callCipValidateEmailEndpoint(request) }
-    futureWrapper.map(i => Ok("Got result: " + i))
-
-   /* validateEmailProxyService.callCipValidateEmailEndpoint().map {
-      case resp: WSResponse if resp.getStatus == 200 => Ok
-      case _ => BadRequest("")
+    val fResult: Future[Result] = futureWrapper.map { r =>
+      Json.toJson(r)
     }
-*/
+    fResult
   }
 
 }
