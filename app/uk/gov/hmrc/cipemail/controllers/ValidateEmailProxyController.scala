@@ -17,15 +17,17 @@
 package uk.gov.hmrc.cipemail.controllers
 
 import org.slf4j.LoggerFactory
-import play.api.libs.json.{JsObject, JsValue, Json, __}
+import play.api.libs.functional.syntax.unlift
+import play.api.libs.json.{JsObject, JsValue, Json, OWrites, Writes, __}
 import play.api.libs.ws.WSResponse
 import play.api.mvc.{AbstractController, Action, ControllerComponents, Result}
 import uk.gov.hmrc.cipemail.config.AppConfig
 import uk.gov.hmrc.cipemail.service.ValidateEmailProxyService
 
+import java.util.concurrent.CompletionStage
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.Future
+import scala.concurrent.{Future, future}
 
 @Singleton
 class ValidateEmailProxyController @Inject()(cc: ControllerComponents,
@@ -41,13 +43,42 @@ class ValidateEmailProxyController @Inject()(cc: ControllerComponents,
     withJsonBody[EmailAddress] { _ => Future.successful(Ok) }
   }*/
 
+  /*
+  match {
+  case d: Double => d
+  case _  => "NaN"
+}
+   */
+
   // TODO - ADD IN ERROR HANDLING
   def validateFormat(): Action[JsValue] = Action(parse.json).async { implicit request =>
     val futureWrapper = scala.concurrent.Future { validateEmailProxyService.callCipValidateEmailEndpoint(request) }
-    val fResult: Future[Result] = futureWrapper.map { r =>
+    futureWrapper
+   /* futureWrapper match {
+      case response: WSResponse => {
+        val responseStatus = response.status
+       /* val fResult: Future[Result] = futureWrapper.map { r =>
+          r.whenCompleteAsync( w -> w.)
+        }
+        fResult*/
+      /*  if (responseStatus == 200) {
+          Future.successful(Ok)
+        } else if (responseStatus == 400) {
+          Future.successful(BadRequest(cc.messagesApi("error.invalid")(cc.langs.availables.head)))
+        } else {
+          Future.successful(response)
+        }*/
+
+      }
+      //{Future[Result] = response.json }//Future.successful(response)
+     // case _ => Future.successful(BadRequest(cc.messagesApi("error.invalid")(cc.langs.availables.head)))
+    }*/
+
+
+   /* val fResult: Future[Result] = futureWrapper.map { r =>
       Json.toJson(r)
     }
-    fResult
+    fResult*/
   }
 
 }
