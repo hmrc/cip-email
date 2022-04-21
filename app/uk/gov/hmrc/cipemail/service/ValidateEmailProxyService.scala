@@ -31,12 +31,12 @@ class ValidateEmailProxyService @Inject()(config: AppConfig,
   def callCipValidateEmailEndpoint(request: Request[JsValue]): CompletionStage[WSResponse] = {
 
     val incomingPayload: JsValue = request.body
-    val phoneNumberJsonStr = (incomingPayload \ "phoneNumber").as[String]
+    val phoneNumberJsonStr = (incomingPayload \ "email").as[String]
 
     val requestToCip: WSRequest = ws.url(config.cipValidateEmailEndpoint).addHeader("Accept", "application/json")
 
     val payload = Json.obj(
-      "phoneNumber" -> phoneNumberJsonStr
+      "email" -> phoneNumberJsonStr
     ).toString()
 
     val result: CompletionStage[WSResponse] = requestToCip.post(payload)
