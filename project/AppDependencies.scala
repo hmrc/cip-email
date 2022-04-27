@@ -12,6 +12,7 @@ object AppDependencies {
   val test = Seq(
     "uk.gov.hmrc"             %% "bootstrap-test-play-28"     % "5.23.0"            % "test, it",
     "org.scalatestplus"       %% "mockito-3-4"                % "3.2.10.0"          % "test, it",
-    "com.vladsch.flexmark"    %  "flexmark-all"               % "0.36.8"            % "test, it"
+    "com.vladsch.flexmark"    %  "flexmark-all"               % "0.36.8"            % "test, it",
+    "de.leanovate.play-mockws"%% "play-mockws"                % "2.8.1"             % "test, it"
   )
 }

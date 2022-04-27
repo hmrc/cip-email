@@ -27,7 +27,6 @@ import javax.inject.Inject
 class ValidateEmailProxyService @Inject()(config: AppConfig,
                                           ws: WSClient) {
 
-  // TODO - PUT IN CONFIG FOR ACTUAL POST BODY
   def callCipValidateEmailEndpoint(request: Request[JsValue]): CompletionStage[WSResponse] = {
 
     val incomingPayload: JsValue = request.body
