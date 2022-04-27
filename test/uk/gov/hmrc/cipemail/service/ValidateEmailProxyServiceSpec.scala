@@ -19,10 +19,6 @@ class ValidateEmailProxyServiceSpec extends PlaySpec with MockitoSugar with Guic
   private val fakeRequest = FakeRequest()
   private implicit val writes: OWrites[EmailAddressDTO] = Json.writes[EmailAddressDTO]
   private lazy val classUnderTest = app.injector.instanceOf[ValidateEmailProxyService]
-  // val config: Configuration = app.configuration
-  // val servicesConfig: ServicesConfig = new ServicesConfig(config)
-  // val appConfig: AppConfig = new AppConfig(config, servicesConfig)
-  //val classUnderTest = new ValidateEmailProxyService(appConfig, wsClient)
 
   "ValidateEmailProxyService#callCipValidateEmailEndpoint" should {
     "return response if the response from the cip platform is successful" in {
