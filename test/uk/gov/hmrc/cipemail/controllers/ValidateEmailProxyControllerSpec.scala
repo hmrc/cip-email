@@ -16,35 +16,64 @@
 
 package uk.gov.hmrc.cipemail.controllers
 
+import org.mockito.ArgumentMatchers.{any}
+import org.mockito.Mockito.{reset, when}
+import org.scalatest.BeforeAndAfterEach
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
+import org.scalatestplus.mockito.MockitoSugar
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.http.Status.{BAD_REQUEST, OK}
+import play.api.inject.bind
+import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.libs.json.{Json, OWrites}
+import play.api.mvc.Result
+import play.api.mvc.Results.{BadRequest, Ok}
 import play.api.test.FakeRequest
-import play.api.test.Helpers.{contentAsJson, defaultAwaitTimeout, status}
+import play.api.test.Helpers.{contentAsString, defaultAwaitTimeout, status}
 import uk.gov.hmrc.cipemail.dto.EmailAddressDTO
+import uk.gov.hmrc.cipemail.service.ValidateEmailProxyService
 
+import scala.concurrent.Future
 import scala.util.Random
 
-class ValidateEmailProxyControllerSpec extends  AnyWordSpec with Matchers with GuiceOneAppPerSuite {
+class ValidateEmailProxyControllerSpec extends  AnyWordSpec with Matchers with MockitoSugar with GuiceOneAppPerSuite with BeforeAndAfterEach {
 
+  val expectedErrorMessage: String = "Enter a valid email address"
   private val fakeRequest = FakeRequest()
-  private lazy val controller = app.injector.instanceOf[ValidateEmailProxyController]
   private implicit val writes: OWrites[EmailAddressDTO] = Json.writes[EmailAddressDTO]
+  private val successResult: Future[Result] = Future.successful(Ok)
+  private val errorResult: Future[Result] = Future.successful(BadRequest("Enter a valid email address"))
+
+  private val mockValidateEmailProxyService: ValidateEmailProxyService = mock[ValidateEmailProxyService]
+  override lazy val app = new GuiceApplicationBuilder()
+    .overrides(bind[ValidateEmailProxyService].toInstance(mockValidateEmailProxyService))
+    .build()
+  private val controller = app.injector.instanceOf[ValidateEmailProxyController]
+
+  override def beforeEach() {
+    when(mockValidateEmailProxyService.callCipValidateEmailEndpoint(any())).thenReturn(errorResult)
+  }
+
+  override def afterEach() {
+    reset(mockValidateEmailProxyService)
+  }
 
   "POST /" should {
     "return 200 with valid email address" in {
+      // override mock in beforeEach
+      when(mockValidateEmailProxyService.callCipValidateEmailEndpoint(any())).thenReturn(successResult)
       val result = controller.validateFormat()(
         fakeRequest.withBody(Json.toJson(EmailAddressDTO("test@test.com"))))
       status(result) shouldBe OK
     }
 
     "return 400 with email with no @" in {
-      val result = controller.validateFormat()(
+      val actual = controller.validateFormat()(
         fakeRequest.withBody(Json.toJson(EmailAddressDTO("invalid.email"))))
-      status(result) shouldBe BAD_REQUEST
-      (contentAsJson(result) \ "details" \ "obj.email").as[String] shouldBe "Enter a valid email address"
+      status(actual) shouldBe BAD_REQUEST
+      val bodyText: String = contentAsString(actual)
+      bodyText shouldBe expectedErrorMessage
     }
 
     "return 400 with email address too long" in {
@@ -52,31 +81,35 @@ class ValidateEmailProxyControllerSpec extends  AnyWordSpec with Matchers with G
       val domain = "test"
       val topLevelDomain = "com"
       val email = s"${local}@${domain}.${topLevelDomain}"
-      val result = controller.validateFormat()(
+      val actual = controller.validateFormat()(
         fakeRequest.withBody(Json.toJson(EmailAddressDTO(email))))
-      status(result) shouldBe BAD_REQUEST
-      (contentAsJson(result) \ "details" \ "obj.email").as[String] shouldBe "Enter a valid email address"
+      status(actual) shouldBe BAD_REQUEST
+      val bodyText: String = contentAsString(actual)
+      bodyText shouldBe expectedErrorMessage
     }
 
     "return 400 with email address with spaces" in {
-      val result = controller.validateFormat()(
+      val actual = controller.validateFormat()(
         fakeRequest.withBody(Json.toJson(EmailAddressDTO("invalid email"))))
-      status(result) shouldBe BAD_REQUEST
-      (contentAsJson(result) \ "details" \ "obj.email").as[String] shouldBe "Enter a valid email address"
+      status(actual) shouldBe BAD_REQUEST
+      val bodyText: String = contentAsString(actual)
+      bodyText shouldBe expectedErrorMessage
     }
 
     "return 400 with blank email" in {
-      val result = controller.validateFormat()(
+      val actual = controller.validateFormat()(
         fakeRequest.withBody(Json.toJson(EmailAddressDTO(""))))
-      status(result) shouldBe BAD_REQUEST
-      (contentAsJson(result) \ "details" \ "obj.email").as[String] shouldBe "Enter a valid email address"
+      status(actual) shouldBe BAD_REQUEST
+      val bodyText: String = contentAsString(actual)
+      bodyText shouldBe expectedErrorMessage
     }
 
     "return 400 with blank email with spaces" in {
-      val result = controller.validateFormat()(
+      val actual = controller.validateFormat()(
         fakeRequest.withBody(Json.toJson(EmailAddressDTO(" "))))
-      status(result) shouldBe BAD_REQUEST
-      (contentAsJson(result) \ "details" \ "obj.email").as[String] shouldBe "Enter a valid email address"
+      status(actual) shouldBe BAD_REQUEST
+      val bodyText: String = contentAsString(actual)
+      bodyText shouldBe expectedErrorMessage
     }
   }
 

@@ -16,18 +16,12 @@
 
 package uk.gov.hmrc.cipemail.controllers
 
-import akka.util.ByteString
 import org.slf4j.LoggerFactory
-import play.api.http.HttpEntity
 import play.api.libs.json.{JsValue, __}
-import play.api.libs.ws.WSResponse
-import play.api.mvc.{AbstractController, Action, ControllerComponents, ResponseHeader, Result}
-import uk.gov.hmrc.cipemail.config.AppConfig
+import play.api.mvc.{AbstractController, Action, ControllerComponents}
 import uk.gov.hmrc.cipemail.service.ValidateEmailProxyService
 
 import javax.inject.{Inject, Singleton}
-import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.{Future, future}
 
 @Singleton
 class ValidateEmailProxyController @Inject()(cc: ControllerComponents,
@@ -35,6 +29,7 @@ class ValidateEmailProxyController @Inject()(cc: ControllerComponents,
     extends AbstractController(cc) {
 
   private val logger = LoggerFactory.getLogger(getClass)
+/*
 
   implicit def Response2Result(response: Future[WSResponse]): Future[Result] = {
     response map {
@@ -60,6 +55,12 @@ class ValidateEmailProxyController @Inject()(cc: ControllerComponents,
         result
       }
     }
+  }
+*/
+
+  def validateFormat(): Action[JsValue] = Action(parse.json).async { implicit request =>
+    logger.debug("cip-email: validating email")
+    validateEmailProxyService.callCipValidateEmailEndpoint(request)
   }
 
 }
