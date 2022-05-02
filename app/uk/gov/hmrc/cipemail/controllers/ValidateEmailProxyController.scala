@@ -17,7 +17,7 @@
 package uk.gov.hmrc.cipemail.controllers
 
 import org.slf4j.LoggerFactory
-import play.api.libs.json.{JsValue, __}
+import play.api.libs.json.{JsValue}
 import play.api.mvc.{AbstractController, Action, ControllerComponents}
 import uk.gov.hmrc.cipemail.service.ValidateEmailProxyService
 
@@ -29,34 +29,6 @@ class ValidateEmailProxyController @Inject()(cc: ControllerComponents,
     extends AbstractController(cc) {
 
   private val logger = LoggerFactory.getLogger(getClass)
-/*
-
-  implicit def Response2Result(response: Future[WSResponse]): Future[Result] = {
-    response map {
-      response =>
-        val headers = response.allHeaders map {
-          h => (h._1, h._2.head)
-        }
-        val result = Result(ResponseHeader(response.status, headers), HttpEntity.Strict(ByteString(response.body), Some("application/json")))
-        result
-    }
-  }
-
-  def validateFormat(): Action[JsValue] = Action(parse.json).async { implicit request =>
-    val futureWrapper = scala.concurrent.Future {
-      validateEmailProxyService.callCipValidateEmailEndpoint(request)
-    }
-    futureWrapper match {
-      case response: WSResponse => {
-        val futureWrapperForWSResponse = scala.concurrent.Future {
-          response
-        }
-        val result = Response2Result(futureWrapperForWSResponse)
-        result
-      }
-    }
-  }
-*/
 
   def validateFormat(): Action[JsValue] = Action(parse.json).async { implicit request =>
     logger.debug("cip-email: validating email")

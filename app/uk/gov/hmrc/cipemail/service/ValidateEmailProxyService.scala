@@ -16,18 +16,21 @@
 
 package uk.gov.hmrc.cipemail.service
 
+import org.slf4j.LoggerFactory
+import play.api.http.HttpEntity
 import play.api.libs.json.{JsValue, Json}
-import play.api.mvc.Results.{BadRequest, Ok}
-import play.api.mvc.{Request, Result}
+import play.api.mvc.{Request, ResponseHeader, Result}
 import play.libs.ws.{WSClient, WSRequest, WSResponse}
 import uk.gov.hmrc.cipemail.config.AppConfig
 
-import java.util.concurrent.CompletionStage
 import javax.inject.Inject
+import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
 class ValidateEmailProxyService @Inject()(config: AppConfig,
                                           ws: WSClient) {
+
+  private val logger = LoggerFactory.getLogger(getClass)
 
   def callCipValidateEmailEndpoint(request: Request[JsValue]): Future[Result] = {
     val incomingPayload: JsValue = request.body
@@ -39,31 +42,32 @@ class ValidateEmailProxyService @Inject()(config: AppConfig,
       "email" -> phoneNumberJsonStr
     ).toString()
 
-    val future: CompletionStage[WSResponse] = requestToCip.post(payload)
-    future.whenComplete { (result, error) => {
-      if (result != null && result.getStatus == 200) {
-        // Future.successful(Ok)
-        val futureToReturn = Future.successful(Ok)
-        //futureToReturn
-        return futureToReturn
-      }
-      if (result != null && result.getStatus == 400) {
-        //  Future.successful(BadRequest(result.getBody))
-        val futureToReturn = Future.successful(BadRequest(result.getBody))
-        futureToReturn
-        return futureToReturn
-      }
-      if (error != null) {
-        //  Future.failed(error)
-        val futureToReturn = Future.failed(error)
-        futureToReturn
-        return futureToReturn
-      }
+    val futureWrapper: Future[WSResponse] = scala.concurrent.Future {
+      requestToCip.post(payload).toCompletableFuture.get()
     }
+    convertFutureToFutureResult(futureWrapper)
+  }
 
+  private def convertFutureToFutureResult(f: Future[WSResponse]): Future[Result] = {
+    f.flatMap { result =>
+      Future.successful(Response2Result(result))
     }
-    val futureToReturn: Future[Result] = Future.failed(new Throwable)
-    futureToReturn
+      .recoverWith {
+        case e: Exception =>
+          logger.error(s"Something went wrong, ${e.getMessage}")
+          Future.failed(e)
+      }
+  }
+
+  implicit def FutureResponse2FutureResult(response: Future[WSResponse]): Future[Result] = {
+    response map {
+      response =>
+        Result(ResponseHeader(response.getStatus, Map.empty), HttpEntity.Strict(response.getBodyAsBytes, None))
+    }
+  }
+
+  implicit def Response2Result(response: WSResponse): Result = {
+    Result(ResponseHeader(response.getStatus, Map.empty), HttpEntity.Strict(response.getBodyAsBytes, None))
   }
 
 }
