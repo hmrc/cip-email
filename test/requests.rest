@@ -1,0 +1,15 @@
+### VALID
+POST http://localhost:8080/customer-insight-platform/email/validate-format
+content-type: application/json
+
+{
+  "email" : "w@sad.com"
+}
+
+### INVALID
+POST http://localhost:8080/customer-insight-platform/email/validate-format
+content-type: application/json
+
+{
+"email" : "sad.com"
+}
