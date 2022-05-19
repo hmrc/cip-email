@@ -1,0 +1,6 @@
+POST http://localhost:8080/customer-insight-platform/email/validate-format
+content-type: application/json
+
+{
+  "email" : "martin@gmail.com"
+}
