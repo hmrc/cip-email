@@ -22,7 +22,7 @@ import org.scalatestplus.play.guice.GuiceOneServerPerSuite
 import play.api.http.Status
 import play.api.libs.json.{Json, OWrites}
 import play.api.test.FakeRequest
-import play.api.test.Helpers.{defaultAwaitTimeout, status}
+import play.api.test.Helpers.{contentAsJson, defaultAwaitTimeout, status}
 import uk.gov.hmrc.cipemail.controllers.ValidateController
 
 class ValidateControllerIntegrationSpec extends AnyWordSpec with Matchers with GuiceOneServerPerSuite {
@@ -36,16 +36,12 @@ class ValidateControllerIntegrationSpec extends AnyWordSpec with Matchers with G
       status(result) shouldBe Status.OK
     }
 
-// TODO HttpError Handler to be implemented, also cip-email-validation to return correct message
-//
-//    "return 400 with invalid email address" in {
-//      val result = controller.validateEmailNumber()(
-//        fakeRequest.withBody(Json.toJson(EmailAddress("test.com"))))
-//
-//      status(result) shouldBe Status.BAD_REQUEST
-//      (contentAsJson(result) \ "message" ).as[String] shouldBe "Enter a valid email address"
-//    }
-
+    "return 400 with invalid email address" in new SetUp {
+      val result = controller.validateEmailNumber()(
+        fakeRequest.withBody(Json.toJson(EmailAddress("test.com"))))
+      status(result) shouldBe Status.BAD_REQUEST
+      (contentAsJson(result) \ "message" ).as[String] shouldBe "Enter a valid email address"
+    }
   }
 
   trait SetUp {
