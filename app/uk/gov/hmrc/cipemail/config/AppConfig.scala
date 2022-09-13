@@ -16,13 +16,13 @@
 
 package uk.gov.hmrc.cipemail.config
 
-import javax.inject.{Inject, Singleton}
 import play.api.Configuration
+
+import javax.inject.{Inject, Singleton}
 
 @Singleton
 class AppConfig @Inject()(config: Configuration) {
 
-  lazy val appName: String = config.get[String]("appName")
   lazy val validateUrlProtocol: String = config.get[String]("microservice.services.cipemail.validation.protocol")
   lazy val validateUrlHost: String = config.get[String]("microservice.services.cipemail.validation.host")
   lazy val validateUrlPort: String = config.get[String]("microservice.services.cipemail.validation.port")

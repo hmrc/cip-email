@@ -25,19 +25,19 @@ import play.api.test.FakeRequest
 import play.api.test.Helpers.{contentAsJson, defaultAwaitTimeout, status}
 import uk.gov.hmrc.cipemail.controllers.ValidateController
 
-class ValidateControllerIntegrationSpec extends AnyWordSpec with Matchers with GuiceOneServerPerSuite {
+class ValidateIntegrationSpec extends AnyWordSpec with Matchers with GuiceOneServerPerSuite {
   private val fakeRequest = FakeRequest()
   private lazy val controller = app.injector.instanceOf[ValidateController]
 
   "POST /" should {
     "return 200 with valid email address" in new SetUp {
-      val result = controller.validateEmailNumber()(
+      val result = controller.validate()(
         fakeRequest.withBody(Json.toJson(EmailAddress("test@test.com"))))
       status(result) shouldBe Status.OK
     }
 
     "return 400 with invalid email address" in new SetUp {
-      val result = controller.validateEmailNumber()(
+      val result = controller.validate()(
         fakeRequest.withBody(Json.toJson(EmailAddress("test.com"))))
       status(result) shouldBe Status.BAD_REQUEST
       (contentAsJson(result) \ "message" ).as[String] shouldBe "Enter a valid email address"
