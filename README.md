@@ -2,33 +2,68 @@
 ## cip-email
 
 ### Summary
+
 Proxy/Forwarder server for cip email services
 
-- cip-email-validation
-- cip-email-verification
-- cip-email-history
-- cip-email-insights
+The default port for cip-email-frontend is 6180
+The default port for cip-email is port 6181
+The default port for cip-email-validation is port 6182
+The default port for cip-email-verification is port 6183
+The default port for cip-email-stubs is port 6199
 
 ### Testing
+
 #### Unit tests
-`sbt clean test`
+    sbt clean test
 
 #### Integration tests
-`sbt clean it:test`
+    sbt clean it:test
 
 ### Running app
 
-In order to run this microservice cip-email you willl need to run the downstream services first. Then run 
-`sbt clean run` and this will run on port 9000
+    sm --start CIP_EMAIL_ALL
 
-#### Example query
-```
-curl --request POST \
-  --url http://localhost:9000/customer-insight-platform/email/validate-format \
-  --header 'content-type: application/json' \
-  --data '{"email" : "test@test.com"}'
-```
+Run the services against the current versions in dev, stop the CIP_EMAIL service and start manually
+
+    sm --start CIP_EMAIL_ALL -r
+    sm --stop CIP_EMAIL
+    cd cip-email
+    sbt run
+
+For reference here are the details for running each of the services individually
+
+    cd cip-email-frontend
+    sbt run
+ 
+    cd cip-email
+    sbt run
+
+    cd cip-email-validation
+    sbt run
+
+    cd cip-email-verification
+    sbt run
+
+### Curl microservice (for curl microservice build jobs)
+
+#### Verify
+
+    -XPOST -H "Content-type: application/json" -d '{
+	    "email": "<email>"
+    }' 'https://cip-email.protected.mdtp/customer-insight-platform/email/verify'
+
+#### Check notification status
+
+    -XGET -H "Content-type: application/json"
+    'https://cip-email.protected.mdtp/customer-insight-platform/email/notifications/<notificationId>'
+
+#### Verify OTP
+
+    -XPOST -H "Content-type: application/json" -d '{
+	    "email": "<email>",
+        "otp": "<otp>"
+    }' 'https://cip-email.protected.mdtp/customer-insight-platform/email/verify/otp'
+
 ### License
 
 This code is open source software licensed under the [Apache 2.0 License]("http://www.apache.org/licenses/LICENSE-2.0.html").
-
