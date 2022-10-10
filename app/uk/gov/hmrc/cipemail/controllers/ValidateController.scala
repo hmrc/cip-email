@@ -22,15 +22,12 @@ import uk.gov.hmrc.cipemail.connectors.ValidateConnector
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 
 import javax.inject.{Inject, Singleton}
-import scala.concurrent.ExecutionContext
 
 @Singleton()
 class ValidateController @Inject()(cc: ControllerComponents, validateConnector: ValidateConnector)
-                                  (implicit ec: ExecutionContext)
   extends BackendController(cc) {
 
   def validate(): Action[JsValue] = Action.async(parse.json) { implicit request =>
     validateConnector.callService(request.body)
   }
 }
-

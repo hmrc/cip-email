@@ -24,10 +24,9 @@ import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.Configuration
 import play.api.libs.json.Json
 import play.api.mvc.Results.Ok
-import uk.gov.hmrc.cipemail.WireMockSupport
 import uk.gov.hmrc.cipemail.config.AppConfig
 import uk.gov.hmrc.http.HeaderCarrier
-import uk.gov.hmrc.http.test.HttpClientV2Support
+import uk.gov.hmrc.http.test.{HttpClientV2Support, WireMockSupport}
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
@@ -39,7 +38,7 @@ class ValidateConnectorSpec extends AnyWordSpec
   with HttpClientV2Support
 {
 
-  val url: String = "/customer-insight-platform/email/validate-format"
+  val url: String = "/customer-insight-platform/email/validate"
 
   "ValidatorConnector.callService" should {
     "return HttpResponse OK for valid input" in new Setup {
@@ -67,7 +66,7 @@ class ValidateConnectorSpec extends AnyWordSpec
       Configuration.from(Map(
         "microservice.services.cipemail.validation.host" -> wireMockHost,
         "microservice.services.cipemail.validation.port" -> wireMockPort,
-        "microservice.services.cipemail.validation.protocol" -> wireMockProtocol,
+        "microservice.services.cipemail.validation.protocol" -> "http"
       ))
     )
 
