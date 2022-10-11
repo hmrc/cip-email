@@ -19,10 +19,11 @@ package uk.gov.hmrc.cipemail.connectors
 import play.api.Logging
 import play.api.libs.json.JsValue
 import play.api.libs.ws.writeableOf_JsValue
+import play.api.mvc.Result
 import play.api.mvc.Results.{BadRequest, Ok}
 import uk.gov.hmrc.cipemail.config.AppConfig
-import uk.gov.hmrc.http.HttpReads.{is2xx, is4xx}
 import uk.gov.hmrc.http.HttpReads.Implicits._
+import uk.gov.hmrc.http.HttpReads.{is2xx, is4xx}
 import uk.gov.hmrc.http.client.HttpClientV2
 import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse, StringContextOps}
 
@@ -33,15 +34,15 @@ import scala.concurrent.{ExecutionContext, Future}
 class ValidateConnector @Inject()(httpClientV2: HttpClientV2, config: AppConfig)
                                  (implicit ec: ExecutionContext) extends Logging {
 
-  def callService(emailJsValue: JsValue)(implicit hc: HeaderCarrier) = {
+  def callService(emailJsValue: JsValue)(implicit hc: HeaderCarrier): Future[Result] = {
     val validateUrl = s"${config.validateUrlProtocol}://${config.validateUrlHost}:${config.validateUrlPort}"
 
     httpClientV2
-      .post(url"$validateUrl/customer-insight-platform/email/validate-format")
+      .post(url"$validateUrl/customer-insight-platform/email/validate")
       .withBody(emailJsValue)
       .execute[HttpResponse]
       .flatMap {
-        case r if is2xx(r.status) =>  Future.successful(Ok)
+        case r if is2xx(r.status) => Future.successful(Ok)
         case r if is4xx(r.status) => Future.successful(BadRequest(r.json))
       } recoverWith {
       case e: Throwable =>
