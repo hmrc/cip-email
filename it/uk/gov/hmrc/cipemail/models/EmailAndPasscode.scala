@@ -14,20 +14,12 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.cipemail.controllers
+package uk.gov.hmrc.cipemail.models
 
-import play.api.libs.json.JsValue
-import play.api.mvc.{Action, ControllerComponents}
-import uk.gov.hmrc.cipemail.connectors.ValidateConnector
-import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
+import play.api.libs.json.{Json, Reads}
 
-import javax.inject.{Inject, Singleton}
+case class EmailAndPasscode(email: String, passcode: String)
 
-@Singleton()
-class ValidateController @Inject()(cc: ControllerComponents, validateConnector: ValidateConnector)
-  extends BackendController(cc) {
-
-  def validate(): Action[JsValue] = Action.async(parse.json) { implicit request =>
-    validateConnector.callService(request.body)
-  }
+object EmailAndPasscode {
+  implicit val reads: Reads[EmailAndPasscode] = Json.reads[EmailAndPasscode]
 }

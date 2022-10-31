@@ -14,18 +14,25 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.cipemail.config
+package uk.gov.hmrc.cipemail.models.api
 
-import play.api.Configuration
+import play.api.libs.json.{Json, OWrites}
+import uk.gov.hmrc.cipemail.models.api.ErrorResponse.Message.Message
 
-import javax.inject.{Inject, Singleton}
+case class ErrorResponse(code: Int, message: Message)
 
-@Singleton
-class AppConfig @Inject()(config: Configuration) {
+object ErrorResponse {
+  implicit val writes: OWrites[ErrorResponse] = Json.writes[ErrorResponse]
 
-  lazy val verifyUrlProtocol: String = config.get[String]("microservice.services.cipemail.verification.protocol")
-  lazy val verifyUrlHost: String = config.get[String]("microservice.services.cipemail.verification.host")
-  lazy val verifyUrlPort: String = config.get[String]("microservice.services.cipemail.verification.port")
+  object Codes extends Enumeration {
+    type Code = Value
 
-  lazy val httpTimeout: Long = config.getMillis("http.timeout")
+    val SERVER_CURRENTLY_UNAVAILABLE: Codes.Value = Value(1009)
+  }
+
+  object Message extends Enumeration {
+    type Message = String
+
+    val SERVER_CURRENTLY_UNAVAILABLE = "Server currently unavailable"
+  }
 }
