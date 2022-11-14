@@ -114,7 +114,8 @@ class VerifyConnectorSpec extends AnyWordSpec
       "http.timeout" -> 30000,
       "microservice.services.cipemail.verification.host" -> wireMockHost,
       "microservice.services.cipemail.verification.port" -> wireMockPort,
-      "microservice.services.cipemail.verification.protocol" -> "http")))
+      "microservice.services.cipemail.verification.protocol" -> "http",
+      "microservice.services.cipemail.verification.auth-token" -> "fake-token")))
 
     val verifyConnector = new VerifyConnector(httpClientV2, appConfig)
   }

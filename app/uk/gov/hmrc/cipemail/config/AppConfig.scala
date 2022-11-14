@@ -26,6 +26,7 @@ class AppConfig @Inject()(config: Configuration) {
   lazy val verifyUrlProtocol: String = config.get[String]("microservice.services.cipemail.verification.protocol")
   lazy val verifyUrlHost: String = config.get[String]("microservice.services.cipemail.verification.host")
   lazy val verifyUrlPort: String = config.get[String]("microservice.services.cipemail.verification.port")
+  lazy val authToken: String = config.get[String]("microservice.services.cipemail.verification.auth-token")
 
   lazy val httpTimeout: Long = config.getMillis("http.timeout")
 }
