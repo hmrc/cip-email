@@ -14,18 +14,20 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.cipemail.config
+package uk.gov.hmrc.cipemail.utils
 
-import play.api.Configuration
+import play.api.mvc.Result
+import play.api.mvc.Results.Status
+import uk.gov.hmrc.http.HttpResponse
 
-import javax.inject.{Inject, Singleton}
+object ResultBuilder {
 
-@Singleton
-class AppConfig @Inject()(config: Configuration) {
+  def processHttpResponse(response: HttpResponse): Result = {
+    val headers = response.headers.toSeq flatMap {
+      case (parameter, values) =>
+        values map (parameter -> _)
+    }
+    Status(response.status)(response.body).withHeaders(headers: _*)
+  }
 
-  lazy val verifyUrlProtocol: String = config.get[String]("microservice.services.cipemail.verification.protocol")
-  lazy val verifyUrlHost: String = config.get[String]("microservice.services.cipemail.verification.host")
-  lazy val verifyUrlPort: String = config.get[String]("microservice.services.cipemail.verification.port")
-
-  lazy val httpTimeout: Long = config.getMillis("http.timeout")
 }
