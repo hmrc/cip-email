@@ -43,6 +43,7 @@ class VerifyConnector @Inject()(httpClientV2: HttpClientV2, config: AppConfig)
       .post(url"$verifyUrl")
       .withBody(body)
       .transform(_.withRequestTimeout(timeout))
+      .transform(_.withHttpHeaders(("Authorization", config.authToken)))
       .execute[HttpResponse]
   }
 
@@ -51,6 +52,7 @@ class VerifyConnector @Inject()(httpClientV2: HttpClientV2, config: AppConfig)
       .post(url"$verifyPasscodeUrl")
       .withBody(body)
       .transform(_.withRequestTimeout(timeout))
+      .transform(_.withHttpHeaders(("Authorization", config.authToken)))
       .execute[HttpResponse]
   }
 
@@ -58,6 +60,7 @@ class VerifyConnector @Inject()(httpClientV2: HttpClientV2, config: AppConfig)
     httpClientV2
       .get(url"${notificationsUrl.format(notificationId)}")
       .transform(_.withRequestTimeout(timeout))
+      .transform(_.withHttpHeaders(("Authorization", config.authToken)))
       .execute[HttpResponse]
   }
 }
