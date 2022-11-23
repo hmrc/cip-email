@@ -20,10 +20,11 @@ import play.api.Logging
 import play.api.libs.json.Json
 import play.api.mvc.{Action, AnyContent, ControllerComponents, Result}
 import uk.gov.hmrc.cipemail.connectors.VerifyConnector
+import uk.gov.hmrc.cipemail.metrics.MetricsService
 import uk.gov.hmrc.cipemail.models.api.ErrorResponse
 import uk.gov.hmrc.cipemail.models.api.ErrorResponse.{Codes, Message}
 import uk.gov.hmrc.cipemail.utils.ResultBuilder.processHttpResponse
-import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse}
+import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 
 import javax.inject.{Inject, Singleton}
@@ -31,7 +32,7 @@ import scala.concurrent.{ExecutionContext, Future}
 import scala.util.{Failure, Success}
 
 @Singleton()
-class NotificationController @Inject()(cc: ControllerComponents, verifyConnector: VerifyConnector)
+class NotificationController @Inject()(cc: ControllerComponents, verifyConnector: VerifyConnector, metricsService: MetricsService )
                                       (implicit executionContext: ExecutionContext)
   extends BackendController(cc)
   with Logging {
@@ -43,7 +44,9 @@ class NotificationController @Inject()(cc: ControllerComponents, verifyConnector
   private def callVerificationService(notificationId: String)(implicit hc: HeaderCarrier): Future[Result] = {
     verifyConnector.callCheckStatusEndpoint(notificationId).transformWith {
       case Success(response) => Future.successful(processHttpResponse(response))
-      case Failure(e) => logger.error(s"An unexpected error has occurred: ${e.getMessage}")
+      case Failure(e) =>
+        metricsService.recordMetric("cip-notification-status-failure")
+        logger.error(s"An unexpected error has occurred")
         Future.successful(GatewayTimeout(Json.toJson(ErrorResponse(Codes.SERVER_CURRENTLY_UNAVAILABLE.id, Message.SERVER_CURRENTLY_UNAVAILABLE))))
     }
   }

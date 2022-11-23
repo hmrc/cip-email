@@ -20,11 +20,12 @@ import org.mockito.ArgumentMatchersSugar.any
 import org.mockito.IdiomaticMockito
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
-import play.api.http.Status.{BAD_REQUEST, INTERNAL_SERVER_ERROR, OK}
+import play.api.http.Status.{BAD_REQUEST, GATEWAY_TIMEOUT, INTERNAL_SERVER_ERROR, OK}
 import play.api.libs.json.Json
 import play.api.test.Helpers.{contentAsJson, defaultAwaitTimeout, status}
 import play.api.test.{FakeRequest, Helpers}
 import uk.gov.hmrc.cipemail.connectors.VerifyConnector
+import uk.gov.hmrc.cipemail.metrics.MetricsService
 import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse}
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -36,7 +37,8 @@ class VerifyPasscodeControllerSpec extends AnyWordSpec
 
   private val fakeRequest = FakeRequest()
   private val mockVerifyConnector: VerifyConnector = mock[VerifyConnector]
-  private val controller = new VerifyPasscodeController(Helpers.stubControllerComponents(), mockVerifyConnector)
+  private val mockMetricsService: MetricsService = mock[MetricsService]
+  private val controller = new VerifyPasscodeController(Helpers.stubControllerComponents(), mockVerifyConnector, mockMetricsService)
 
   "verifyPasscode" should {
     "convert upstream 200 response" in {
@@ -47,6 +49,7 @@ class VerifyPasscodeControllerSpec extends AnyWordSpec
         fakeRequest.withBody(Json.parse("""{"req":"req"}"""))
       )
 
+      mockMetricsService wasNever called
       status(response) shouldBe OK
       contentAsJson(response) shouldBe Json.parse("""{"res":"res"}""")
     }
@@ -59,6 +62,7 @@ class VerifyPasscodeControllerSpec extends AnyWordSpec
         fakeRequest.withBody(Json.parse("""{"req":"req"}"""))
       )
 
+      mockMetricsService wasNever called
       status(response) shouldBe BAD_REQUEST
       contentAsJson(response) shouldBe Json.parse("""{"res":"res"}""")
     }
@@ -71,7 +75,20 @@ class VerifyPasscodeControllerSpec extends AnyWordSpec
         fakeRequest.withBody(Json.parse("""{"req":"req"}"""))
       )
 
+      mockMetricsService wasNever called
       status(response) shouldBe INTERNAL_SERVER_ERROR
+    }
+
+    "convert upstream 504 response" in {
+      mockVerifyConnector.callVerifyPasscodeEndpoint(Json.parse("""{"req":"req"}"""))(any[HeaderCarrier])
+        .returns(Future.failed(new Throwable))
+
+      val response = controller.verifyPasscode(
+        fakeRequest.withBody(Json.parse("""{"req":"req"}"""))
+      )
+
+      mockMetricsService.recordMetric("cip-verify-passcode-failure") was called
+      status(response) shouldBe GATEWAY_TIMEOUT
     }
   }
 }

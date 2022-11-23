@@ -20,6 +20,7 @@ import play.api.Logging
 import play.api.libs.json.{JsValue, Json}
 import play.api.mvc.{Action, ControllerComponents, Result}
 import uk.gov.hmrc.cipemail.connectors.VerifyConnector
+import uk.gov.hmrc.cipemail.metrics.MetricsService
 import uk.gov.hmrc.cipemail.models.api.ErrorResponse
 import uk.gov.hmrc.cipemail.models.api.ErrorResponse.{Codes, Message}
 import uk.gov.hmrc.cipemail.utils.ResultBuilder.processHttpResponse
@@ -31,7 +32,7 @@ import scala.concurrent.{ExecutionContext, Future}
 import scala.util.{Failure, Success}
 
 @Singleton()
-class VerifyController @Inject()(cc: ControllerComponents, verifyConnector: VerifyConnector)(implicit executionContext: ExecutionContext)
+class VerifyController @Inject()(cc: ControllerComponents, verifyConnector: VerifyConnector, metricsService: MetricsService)(implicit executionContext: ExecutionContext)
   extends BackendController(cc) with Logging {
 
   def verify: Action[JsValue] = Action.async(parse.json) { implicit request =>
@@ -41,7 +42,9 @@ class VerifyController @Inject()(cc: ControllerComponents, verifyConnector: Veri
   private def callVerificationService(body: JsValue)(implicit hc: HeaderCarrier): Future[Result] = {
     verifyConnector.callVerifyEndpoint(body).transformWith {
       case Success(response) => Future.successful(processHttpResponse(response))
-      case Failure(e) => logger.error(s"An unexpected error has occurred: ${e.getMessage}")
+      case Failure(e) =>
+        metricsService.recordMetric("cip-verify-email-failure")
+        logger.error(s"An unexpected error has occurred")
         Future.successful(GatewayTimeout(Json.toJson(ErrorResponse(Codes.SERVER_CURRENTLY_UNAVAILABLE.id, Message.SERVER_CURRENTLY_UNAVAILABLE))))
     }
   }
