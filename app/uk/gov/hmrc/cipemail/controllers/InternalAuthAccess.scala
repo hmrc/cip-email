@@ -14,18 +14,13 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.cipemail.utils
+package uk.gov.hmrc.cipemail.controllers
 
-import play.api.mvc.Result
-import play.api.mvc.Results.Status
-import uk.gov.hmrc.http.HttpResponse
+import uk.gov.hmrc.internalauth.client.{IAAction, Predicate, Resource, ResourceLocation, ResourceType}
 
-trait ResultBuilder {
-  def processHttpResponse(response: HttpResponse): Result = {
-    val headers = response.headers.toSeq flatMap {
-      case (parameter, values) =>
-        values map (parameter -> _)
-    }
-    Status(response.status)(response.body).withHeaders(headers: _*)
-  }
+object InternalAuthAccess {
+  val permission: Predicate.Permission = Predicate.Permission(Resource(
+    ResourceType("cip-email"),
+    ResourceLocation("*")),
+    IAAction("*"))
 }

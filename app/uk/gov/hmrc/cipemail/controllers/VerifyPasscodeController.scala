@@ -20,11 +20,13 @@ import play.api.Logging
 import play.api.libs.json.{JsValue, Json}
 import play.api.mvc.{Action, ControllerComponents, Result}
 import uk.gov.hmrc.cipemail.connectors.VerifyConnector
+import uk.gov.hmrc.cipemail.controllers.InternalAuthAccess.permission
 import uk.gov.hmrc.cipemail.metrics.MetricsService
 import uk.gov.hmrc.cipemail.models.api.ErrorResponse
 import uk.gov.hmrc.cipemail.models.api.ErrorResponse.{Codes, Message}
-import uk.gov.hmrc.cipemail.utils.ResultBuilder.processHttpResponse
+import uk.gov.hmrc.cipemail.utils.ResultBuilder
 import uk.gov.hmrc.http.HeaderCarrier
+import uk.gov.hmrc.internalauth.client.BackendAuthComponents
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 
 import javax.inject.{Inject, Singleton}
@@ -32,24 +34,25 @@ import scala.concurrent.{ExecutionContext, Future}
 import scala.util.{Failure, Success}
 
 @Singleton()
-class VerifyPasscodeController @Inject()(cc: ControllerComponents, verifyConnector: VerifyConnector, metricsService: MetricsService)
-                                (implicit executionContext: ExecutionContext)
+class VerifyPasscodeController @Inject()(cc: ControllerComponents,
+                                         verifyConnector: VerifyConnector,
+                                         auth: BackendAuthComponents,
+                                         metricsService: MetricsService)
+                                        (implicit executionContext: ExecutionContext)
   extends BackendController(cc)
-    with Logging {
+    with Logging with ResultBuilder {
 
-
-  def verifyPasscode: Action[JsValue] = Action.async(parse.json) { implicit request =>
+  def verifyPasscode: Action[JsValue] = auth.authorizedAction[Unit](permission).compose(Action(parse.json)).async { implicit request =>
     callVerificationService(request.body)
   }
 
   private def callVerificationService(body: JsValue)(implicit hc: HeaderCarrier): Future[Result] = {
     verifyConnector.callVerifyPasscodeEndpoint(body).transformWith {
       case Success(response) => Future.successful(processHttpResponse(response))
-      case Failure(e) =>
+      case Failure(_) =>
         metricsService.recordMetric("cip-verify-passcode-failure")
         logger.error(s"An unexpected error has occurred")
         Future.successful(GatewayTimeout(Json.toJson(ErrorResponse(Codes.SERVER_CURRENTLY_UNAVAILABLE.id, Message.SERVER_CURRENTLY_UNAVAILABLE))))
     }
   }
-
 }

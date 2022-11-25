@@ -16,18 +16,24 @@
 
 package uk.gov.hmrc.cipemail.controllers
 
+import akka.stream.ConnectionException
 import org.mockito.ArgumentMatchersSugar.any
 import org.mockito.IdiomaticMockito
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import play.api.http.Status.{BAD_REQUEST, GATEWAY_TIMEOUT, INTERNAL_SERVER_ERROR, OK}
 import play.api.libs.json._
+import play.api.mvc.AnyContentAsEmpty
 import play.api.test.Helpers.{contentAsJson, defaultAwaitTimeout, status}
 import play.api.test.{FakeRequest, Helpers}
 import uk.gov.hmrc.cipemail.connectors.VerifyConnector
 import uk.gov.hmrc.cipemail.metrics.MetricsService
 import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse}
+import uk.gov.hmrc.internalauth.client.Predicate.Permission
+import uk.gov.hmrc.internalauth.client.test.{BackendAuthComponentsStub, StubBehaviour}
+import uk.gov.hmrc.internalauth.client._
 
+import scala.concurrent.ExecutionContext.Implicits
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
@@ -35,46 +41,61 @@ class NotificationControllerSpec extends AnyWordSpec
   with Matchers
   with IdiomaticMockito {
 
-  private val fakeRequest = FakeRequest()
-  private val mockVerifyConnector: VerifyConnector = mock[VerifyConnector]
-  private val mockMetricsService: MetricsService = mock[MetricsService]
-  private val controller = new NotificationController(Helpers.stubControllerComponents(), mockVerifyConnector, mockMetricsService)
-
   "status" should {
-    "convert upstream 200 response" in {
+    "convert upstream 200 response" in new SetUp {
       mockVerifyConnector.callCheckStatusEndpoint("test-notification-id")(any[HeaderCarrier])
         .returns(Future.successful(HttpResponse(OK, """{"m":"m"}""")))
 
-      val response = controller.status("test-notification-id")(fakeRequest)
+      private val response = controller.status("test-notification-id")(fakeRequest)
       mockMetricsService wasNever called
       status(response) shouldBe OK
       contentAsJson(response) shouldBe Json.parse("""{"m":"m"}""")
+      reset(mockMetricsService)
     }
 
-    "convert upstream 400 response" in {
+    "convert upstream 400 response" in new SetUp {
       mockVerifyConnector.callCheckStatusEndpoint("test-notification-id")(any[HeaderCarrier])
         .returns(Future.successful(HttpResponse(BAD_REQUEST, """{"m":"m"}""")))
 
-      val response = controller.status("test-notification-id")(fakeRequest)
+      private val response = controller.status("test-notification-id")(fakeRequest)
       mockMetricsService wasNever called
       status(response) shouldBe BAD_REQUEST
       contentAsJson(response) shouldBe Json.parse("""{"m":"m"}""")
+      reset(mockMetricsService)
     }
 
-    "convert upstream 500 response" in {
+    "convert upstream 500 response" in new SetUp {
       mockVerifyConnector.callCheckStatusEndpoint("test-notification-id")(any[HeaderCarrier])
         .returns(Future.successful(HttpResponse(INTERNAL_SERVER_ERROR, "")))
-      val response = controller.status("test-notification-id")(fakeRequest)
+
+      private val response = controller.status("test-notification-id")(fakeRequest)
       mockMetricsService wasNever called
       status(response) shouldBe INTERNAL_SERVER_ERROR
+      reset(mockMetricsService)
     }
 
-    "convert upstream 504 response" in {
+    "Connection Exception" in new SetUp {
       mockVerifyConnector.callCheckStatusEndpoint("test-notification-id")(any[HeaderCarrier])
-        .returns(Future.failed(new Throwable()))
-      val response = controller.status("test-notification-id")(fakeRequest)
+        .returns(Future.failed(new ConnectionException("")))
+      private val response = controller.status("test-notification-id")(fakeRequest)
       mockMetricsService.recordMetric("cip-notification-status-failure") was called
       status(response) shouldBe GATEWAY_TIMEOUT
+      reset(mockMetricsService)
     }
+  }
+
+  trait SetUp {
+    protected val fakeRequest: FakeRequest[AnyContentAsEmpty.type] = FakeRequest().withHeaders("Authorization" -> "fake-token")
+    private val expectedPredicate = {
+      Permission(Resource(ResourceType("cip-email"), ResourceLocation("*")), IAAction("*"))
+    }
+    protected val mockStubBehaviour: StubBehaviour = mock[StubBehaviour]
+    mockStubBehaviour.stubAuth(Some(expectedPredicate), Retrieval.EmptyRetrieval).returns(Future.unit)
+    protected val mockVerifyConnector: VerifyConnector = mock[VerifyConnector]
+    protected val mockMetricsService: MetricsService = mock[MetricsService]
+    protected val backendAuthComponentsStub: BackendAuthComponents =
+      BackendAuthComponentsStub(mockStubBehaviour)(Helpers.stubControllerComponents(), Implicits.global)
+    protected lazy val controller =
+      new NotificationController(Helpers.stubControllerComponents(), mockVerifyConnector, backendAuthComponentsStub, mockMetricsService)
   }
 }
