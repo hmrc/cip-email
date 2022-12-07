@@ -16,7 +16,6 @@
 
 package uk.gov.hmrc.cipemail.metrics
 
-
 import com.codahale.metrics.Counter
 import com.google.inject.Inject
 import com.kenshoo.play.metrics.Metrics
@@ -24,9 +23,9 @@ import com.kenshoo.play.metrics.Metrics
 import javax.inject.Singleton
 
 @Singleton
-class MetricsService @Inject() (metrics: Metrics){
+class MetricsService @Inject()(metrics: Metrics) {
 
-  def recordMetric(metricName: String) = getCounter(metricName).inc()
+  def recordMetric(metricName: String): Unit = getCounter(metricName).inc()
 
   private def getCounter(counterName: String): Counter =
     metrics.defaultRegistry.counter(counterName)

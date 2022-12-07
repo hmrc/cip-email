@@ -20,13 +20,12 @@ import play.api.Logging
 import play.api.libs.json.{JsValue, Json}
 import play.api.mvc.{Action, ControllerComponents, Result}
 import uk.gov.hmrc.cipemail.connectors.VerifyConnector
-import uk.gov.hmrc.cipemail.controllers.InternalAuthAccess.permission
 import uk.gov.hmrc.cipemail.metrics.MetricsService
 import uk.gov.hmrc.cipemail.models.api.ErrorResponse
 import uk.gov.hmrc.cipemail.models.api.ErrorResponse.{Codes, Message}
 import uk.gov.hmrc.cipemail.utils.ResultBuilder
 import uk.gov.hmrc.http.HeaderCarrier
-import uk.gov.hmrc.internalauth.client._
+import uk.gov.hmrc.internalauth.client.BackendAuthComponents
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 
 import javax.inject.{Inject, Singleton}
@@ -34,12 +33,13 @@ import scala.concurrent.{ExecutionContext, Future}
 import scala.util.{Failure, Success}
 
 @Singleton()
-class VerifyController @Inject()(cc: ControllerComponents,
-                                 verifyConnector: VerifyConnector,
-                                 auth: BackendAuthComponents,
-                                 metricsService: MetricsService)(implicit executionContext: ExecutionContext)
+class VerifyController @Inject()(private val cc: ControllerComponents,
+                                 private val verifyConnector: VerifyConnector,
+                                 private val auth: BackendAuthComponents,
+                                 private val metricsService: MetricsService)
+                                (implicit executionContext: ExecutionContext)
   extends BackendController(cc)
-    with Logging with ResultBuilder {
+    with Logging with ResultBuilder with InternalAuthAccess {
 
   def verify: Action[JsValue] = auth.authorizedAction[Unit](permission).compose(Action(parse.json)).async { implicit request =>
     callVerificationService(request.body)
