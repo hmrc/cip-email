@@ -41,14 +41,14 @@ class VerifyConnectorSpec extends AnyWordSpec
   "verify" should {
     val url: String = "/customer-insight-platform/email/verify"
 
-    "delegate to http client" in new Setup {
+    "delegate to http client" in new SetUp {
       stubFor(
         post(urlEqualTo(url))
           .willReturn(aResponse().withBody("""{"res":"res"}""")
           )
       )
 
-      val result = await(verifyConnector.callVerifyEndpoint(Json.parse(s"""{"req": "req"}""")))
+      private val result = await(verifyConnector.callVerifyEndpoint(Json.parse(s"""{"req": "req"}""")))
 
       result.status shouldBe OK
       result.json shouldBe Json.parse("""{"res":"res"}""")
@@ -63,7 +63,7 @@ class VerifyConnectorSpec extends AnyWordSpec
   "status" should {
     val url: String = "/customer-insight-platform/email/notifications/%s"
 
-    "delegate to http client" in new Setup {
+    "delegate to http client" in new SetUp {
       val notificationId = "test-notification-id"
 
       stubFor(
@@ -72,7 +72,7 @@ class VerifyConnectorSpec extends AnyWordSpec
           )
       )
 
-      val result = await(verifyConnector.callCheckStatusEndpoint(notificationId))
+      private val result = await(verifyConnector.callCheckStatusEndpoint(notificationId))
 
       result.status shouldBe OK
       result.json shouldBe Json.parse("""{"res":"res"}""")
@@ -86,14 +86,14 @@ class VerifyConnectorSpec extends AnyWordSpec
   "verifyPasscode" should {
     val url: String = "/customer-insight-platform/email/verify/passcode"
 
-    "delegate to http client" in new Setup {
+    "delegate to http client" in new SetUp {
       stubFor(
         post(urlEqualTo(url))
           .willReturn(aResponse().withBody("""{"res":"res"}""")
           )
       )
 
-      val result = await(verifyConnector.callVerifyPasscodeEndpoint(Json.parse(s"""{"req": "req"}""".stripMargin)))
+      private val result = await(verifyConnector.callVerifyPasscodeEndpoint(Json.parse(s"""{"req": "req"}""".stripMargin)))
 
       result.status shouldBe OK
       result.json shouldBe Json.parse("""{"res":"res"}""")
@@ -106,7 +106,7 @@ class VerifyConnectorSpec extends AnyWordSpec
     }
   }
 
-  trait Setup {
+  trait SetUp {
 
     implicit val hc: HeaderCarrier = HeaderCarrier()
 

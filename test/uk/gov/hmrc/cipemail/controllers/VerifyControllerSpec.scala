@@ -30,7 +30,7 @@ import uk.gov.hmrc.cipemail.connectors.VerifyConnector
 import uk.gov.hmrc.cipemail.metrics.MetricsService
 import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse}
 import uk.gov.hmrc.internalauth.client.Predicate.Permission
-import uk.gov.hmrc.internalauth.client._
+import uk.gov.hmrc.internalauth.client.{BackendAuthComponents, IAAction, Resource, ResourceLocation, ResourceType, Retrieval}
 import uk.gov.hmrc.internalauth.client.test.{BackendAuthComponentsStub, StubBehaviour}
 
 import scala.concurrent.ExecutionContext.Implicits
@@ -50,12 +50,10 @@ class VerifyControllerSpec extends AnyWordSpec
         fakeRequest.withBody(Json.parse("""{"req":"req"}"""))
       )
 
-
-      mockMetricsService wasNever called
       status(response) shouldBe OK
       contentAsJson(response) shouldBe Json.parse("""{"res":"res"}""")
       header(headerName, response) shouldBe Some(headerValue)
-      reset(mockMetricsService)
+      mockMetricsService wasNever called
     }
 
     "convert upstream 400 response" in new SetUp {
@@ -66,12 +64,10 @@ class VerifyControllerSpec extends AnyWordSpec
         fakeRequest.withBody(Json.parse("""{"req":"req"}"""))
       )
 
-
-      mockMetricsService wasNever called
       status(response) shouldBe BAD_REQUEST
       contentAsJson(response) shouldBe Json.parse("""{"res":"res"}""")
       header(headerName, response) shouldBe Some(headerValue)
-      reset(mockMetricsService)
+      mockMetricsService wasNever called
     }
 
     "convert upstream 500 response" in new SetUp {
@@ -82,13 +78,14 @@ class VerifyControllerSpec extends AnyWordSpec
         fakeRequest.withBody(Json.parse("""{"req":"req"}"""))
       )
 
-      mockMetricsService wasNever called
       status(response) shouldBe INTERNAL_SERVER_ERROR
       header(headerName, response) shouldBe Some(headerValue)
-      reset(mockMetricsService)
+      mockMetricsService wasNever called
     }
 
-    "Connection Exception" in new SetUp {
+    "handle connection exception" in new SetUp {
+      reset(mockMetricsService)
+
       mockVerifyConnector.callVerifyEndpoint(Json.parse("""{"req":"req"}"""))(any[HeaderCarrier])
         .returns(Future.failed(new ConnectionException("")))
 
@@ -96,9 +93,8 @@ class VerifyControllerSpec extends AnyWordSpec
         fakeRequest.withBody(Json.parse("""{"req":"req"}"""))
       )
 
-      mockMetricsService.recordMetric("cip-verify-email-failure") was called
       status(response) shouldBe GATEWAY_TIMEOUT
-      reset(mockMetricsService)
+      mockMetricsService.recordMetric("cip-verify-email-failure") was called
     }
   }
 

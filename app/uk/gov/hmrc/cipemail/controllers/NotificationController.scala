@@ -20,7 +20,6 @@ import play.api.Logging
 import play.api.libs.json.Json
 import play.api.mvc.{Action, AnyContent, ControllerComponents, Result}
 import uk.gov.hmrc.cipemail.connectors.VerifyConnector
-import uk.gov.hmrc.cipemail.controllers.InternalAuthAccess.permission
 import uk.gov.hmrc.cipemail.metrics.MetricsService
 import uk.gov.hmrc.cipemail.models.api.ErrorResponse
 import uk.gov.hmrc.cipemail.models.api.ErrorResponse.{Codes, Message}
@@ -34,10 +33,13 @@ import scala.concurrent.{ExecutionContext, Future}
 import scala.util.{Failure, Success}
 
 @Singleton()
-class NotificationController @Inject()(cc: ControllerComponents, verifyConnector: VerifyConnector, auth: BackendAuthComponents, metricsService: MetricsService)
+class NotificationController @Inject()(private val cc: ControllerComponents,
+                                       private val verifyConnector: VerifyConnector,
+                                       private val auth: BackendAuthComponents,
+                                       private val metricsService: MetricsService)
                                       (implicit executionContext: ExecutionContext)
   extends BackendController(cc)
-    with Logging with ResultBuilder {
+    with Logging with ResultBuilder with InternalAuthAccess {
 
   def status(notificationId: String): Action[AnyContent] = auth.authorizedAction[Unit](permission).compose(Action).async { implicit request =>
     callVerificationService(notificationId)

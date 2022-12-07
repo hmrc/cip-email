@@ -30,8 +30,8 @@ import uk.gov.hmrc.cipemail.connectors.VerifyConnector
 import uk.gov.hmrc.cipemail.metrics.MetricsService
 import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse}
 import uk.gov.hmrc.internalauth.client.Predicate.Permission
+import uk.gov.hmrc.internalauth.client.{BackendAuthComponents, IAAction, Resource, ResourceLocation, ResourceType, Retrieval}
 import uk.gov.hmrc.internalauth.client.test.{BackendAuthComponentsStub, StubBehaviour}
-import uk.gov.hmrc.internalauth.client._
 
 import scala.concurrent.ExecutionContext.Implicits
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -47,10 +47,9 @@ class NotificationControllerSpec extends AnyWordSpec
         .returns(Future.successful(HttpResponse(OK, """{"m":"m"}""")))
 
       private val response = controller.status("test-notification-id")(fakeRequest)
-      mockMetricsService wasNever called
       status(response) shouldBe OK
       contentAsJson(response) shouldBe Json.parse("""{"m":"m"}""")
-      reset(mockMetricsService)
+      mockMetricsService wasNever called
     }
 
     "convert upstream 400 response" in new SetUp {
@@ -58,10 +57,9 @@ class NotificationControllerSpec extends AnyWordSpec
         .returns(Future.successful(HttpResponse(BAD_REQUEST, """{"m":"m"}""")))
 
       private val response = controller.status("test-notification-id")(fakeRequest)
-      mockMetricsService wasNever called
       status(response) shouldBe BAD_REQUEST
       contentAsJson(response) shouldBe Json.parse("""{"m":"m"}""")
-      reset(mockMetricsService)
+      mockMetricsService wasNever called
     }
 
     "convert upstream 500 response" in new SetUp {
@@ -69,18 +67,16 @@ class NotificationControllerSpec extends AnyWordSpec
         .returns(Future.successful(HttpResponse(INTERNAL_SERVER_ERROR, "")))
 
       private val response = controller.status("test-notification-id")(fakeRequest)
-      mockMetricsService wasNever called
       status(response) shouldBe INTERNAL_SERVER_ERROR
-      reset(mockMetricsService)
+      mockMetricsService wasNever called
     }
 
-    "Connection Exception" in new SetUp {
+    "handle connection exception" in new SetUp {
       mockVerifyConnector.callCheckStatusEndpoint("test-notification-id")(any[HeaderCarrier])
         .returns(Future.failed(new ConnectionException("")))
       private val response = controller.status("test-notification-id")(fakeRequest)
-      mockMetricsService.recordMetric("cip-notification-status-failure") was called
       status(response) shouldBe GATEWAY_TIMEOUT
-      reset(mockMetricsService)
+      mockMetricsService.recordMetric("cip-notification-status-failure") was called
     }
   }
 
