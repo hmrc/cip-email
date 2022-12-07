@@ -42,8 +42,8 @@ class VerifyConnector @Inject()(httpClientV2: HttpClientV2, config: AppConfig)
     httpClientV2
       .post(url"$verifyUrl")
       .withBody(body)
-      .transform(_.withRequestTimeout(timeout))
-      .transform(_.withHttpHeaders(("Authorization", config.authToken)))
+      .transform(
+        _.withRequestTimeout(timeout).withHttpHeaders(("Authorization", config.authToken)))
       .execute[HttpResponse]
   }
 
@@ -51,16 +51,16 @@ class VerifyConnector @Inject()(httpClientV2: HttpClientV2, config: AppConfig)
     httpClientV2
       .post(url"$verifyPasscodeUrl")
       .withBody(body)
-      .transform(_.withRequestTimeout(timeout))
-      .transform(_.withHttpHeaders(("Authorization", config.authToken)))
+      .transform(
+        _.withRequestTimeout(timeout).withHttpHeaders(("Authorization", config.authToken)))
       .execute[HttpResponse]
   }
 
   def callCheckStatusEndpoint(notificationId: String)(implicit hc: HeaderCarrier): Future[HttpResponse] = {
     httpClientV2
       .get(url"${notificationsUrl.format(notificationId)}")
-      .transform(_.withRequestTimeout(timeout))
-      .transform(_.withHttpHeaders(("Authorization", config.authToken)))
+      .transform(
+        _.withRequestTimeout(timeout).withHttpHeaders(("Authorization", config.authToken)))
       .execute[HttpResponse]
   }
 }

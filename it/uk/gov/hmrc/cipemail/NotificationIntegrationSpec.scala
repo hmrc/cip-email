@@ -38,12 +38,11 @@ class NotificationIntegrationSpec
 
       val notificationPath = verifyResponse.header("Location").get
 
-
-
       val response =
         wsClient
           .url(s"$baseUrl/customer-insight-platform/email$notificationPath")
           .withRequestFilter(AhcCurlRequestLogger())
+          .withHttpHeaders(("Authorization", "fake-token"))
           .get
           .futureValue
 
@@ -57,6 +56,7 @@ class NotificationIntegrationSpec
         wsClient
           .url(s"$baseUrl/customer-insight-platform/email/notifications/noresult-d385-4b17-a0b4-23a85c0c5b1a")
           .withRequestFilter(AhcCurlRequestLogger())
+          .withHttpHeaders(("Authorization", "fake-token"))
           .get
           .futureValue
 
@@ -66,4 +66,3 @@ class NotificationIntegrationSpec
     }
   }
 }
-

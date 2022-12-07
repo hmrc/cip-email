@@ -53,6 +53,7 @@ trait DataSteps {
     wsClient
       .url(s"$baseUrl/customer-insight-platform/email/verify")
       .withRequestFilter(AhcCurlRequestLogger())
+      .withHttpHeaders(("Authorization", "fake-token"))
       .post(Json.parse {
         s"""{"email": "$email"}""".stripMargin
       })

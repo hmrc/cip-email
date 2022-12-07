@@ -46,6 +46,7 @@ class VerifyPasscodeIntegrationSpec
         wsClient
           .url(s"$baseUrl/customer-insight-platform/email/verify/passcode")
           .withRequestFilter(AhcCurlRequestLogger())
+          .withHttpHeaders(("Authorization", "fake-token"))
           .post(Json.parse {
             s"""{
                "email": "$email",
@@ -57,7 +58,6 @@ class VerifyPasscodeIntegrationSpec
       response.status shouldBe 200
       (response.json \ "status").as[String] shouldBe "Verified"
     }
-
 
     // if there is a value for that input and its within 15 mins
     // then it either mathces or doesn't match
@@ -71,6 +71,7 @@ class VerifyPasscodeIntegrationSpec
         wsClient
           .url(s"$baseUrl/customer-insight-platform/email/verify/passcode")
           .withRequestFilter(AhcCurlRequestLogger())
+          .withHttpHeaders(("Authorization", "fake-token"))
           .post(Json.parse {
             s"""{
                "email": "$email",
@@ -92,6 +93,7 @@ class VerifyPasscodeIntegrationSpec
         wsClient
           .url(s"$baseUrl/customer-insight-platform/email/verify/passcode")
           .withRequestFilter(AhcCurlRequestLogger())
+          .withHttpHeaders(("Authorization", "fake-token"))
           .post(Json.parse {
             s"""{
                "email": "nopasscodefor@test.com",
@@ -111,6 +113,7 @@ class VerifyPasscodeIntegrationSpec
         wsClient
           .url(s"$baseUrl/customer-insight-platform/email/verify/passcode")
           .withRequestFilter(AhcCurlRequestLogger())
+          .withHttpHeaders(("Authorization", "fake-token"))
           .post(Json.parse {
             s"""{
                "email": "test@test.com",

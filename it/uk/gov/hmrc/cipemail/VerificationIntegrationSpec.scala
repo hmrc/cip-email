@@ -39,6 +39,7 @@ class VerifyIntegrationSpec extends AnyWordSpec
         wsClient
           .url(s"$baseUrl/customer-insight-platform/email/verify")
           .withRequestFilter(AhcCurlRequestLogger())
+          .withHttpHeaders(("Authorization", "fake-token"))
           .post(Json.parse("""{"email" : "test@test.com"}"""))
           .futureValue
 
@@ -50,6 +51,7 @@ class VerifyIntegrationSpec extends AnyWordSpec
         wsClient
           .url(s"$baseUrl/customer-insight-platform/email/verify")
           .withRequestFilter(AhcCurlRequestLogger())
+          .withHttpHeaders(("Authorization", "fake-token"))
           .post(Json.parse("""{"email" : "incorrect_email_test"}"""))
           .futureValue
 
