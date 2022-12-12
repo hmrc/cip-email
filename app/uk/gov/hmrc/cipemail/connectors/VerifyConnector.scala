@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 HM Revenue & Customs
+ * Copyright 2023 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,9 +16,10 @@
 
 package uk.gov.hmrc.cipemail.connectors
 
+import akka.stream.Materializer
 import play.api.Logging
 import play.api.libs.json.JsValue
-import uk.gov.hmrc.cipemail.config.AppConfig
+import uk.gov.hmrc.cipemail.config.{AppConfig, CircuitBreakerConfig}
 import uk.gov.hmrc.http.HttpReads.Implicits._
 import uk.gov.hmrc.http.client.HttpClientV2
 import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse, StringContextOps}
@@ -26,41 +27,55 @@ import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse, StringContextOps}
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.duration.Duration
 import scala.concurrent.{ExecutionContext, Future}
+import scala.util.{Failure, Success, Try}
 
 @Singleton
 class VerifyConnector @Inject()(httpClientV2: HttpClientV2, config: AppConfig)
-                               (implicit ec: ExecutionContext) extends Logging {
+                               (implicit ec: ExecutionContext, protected val materializer: Materializer) extends Logging with CircuitBreakerWrapper {
 
-  private val verifyHostUrl: String = s"${config.verifyUrlProtocol}://${config.verifyUrlHost}:${config.verifyUrlPort}"
+  private val verifyHostUrl: String = s"${config.verificationConfig.protocol}://${config.verificationConfig.host}:${config.verificationConfig.port}"
   private val verifyPath: String = s"$verifyHostUrl/customer-insight-platform/email"
   private val verifyUrl: String = s"${verifyPath}/verify"
   private val verifyPasscodeUrl: String = s"${verifyUrl}/passcode"
   private val notificationsUrl: String = s"${verifyPath}/notifications/%s"
   private val timeout = Duration(config.httpTimeout, "milliseconds")
 
+  implicit val connectionFailure: Try[HttpResponse] => Boolean = {
+    case Success(_) => false
+    case Failure(_) => true
+  }
+
   def callVerifyEndpoint(body: JsValue)(implicit hc: HeaderCarrier): Future[HttpResponse] = {
-    httpClientV2
+    withCircuitBreaker[HttpResponse](
+      httpClientV2
       .post(url"$verifyUrl")
       .withBody(body)
       .transform(
-        _.withRequestTimeout(timeout).withHttpHeaders(("Authorization", config.authToken)))
+        _.withRequestTimeout(timeout).withHttpHeaders(("Authorization", config.verificationConfig.authToken)))
       .execute[HttpResponse]
+    )
   }
 
   def callVerifyPasscodeEndpoint(body: JsValue)(implicit hc: HeaderCarrier): Future[HttpResponse] = {
-    httpClientV2
+    withCircuitBreaker[HttpResponse](
+      httpClientV2
       .post(url"$verifyPasscodeUrl")
       .withBody(body)
       .transform(
-        _.withRequestTimeout(timeout).withHttpHeaders(("Authorization", config.authToken)))
+        _.withRequestTimeout(timeout).withHttpHeaders(("Authorization", config.verificationConfig.authToken)))
       .execute[HttpResponse]
+    )
   }
 
   def callCheckStatusEndpoint(notificationId: String)(implicit hc: HeaderCarrier): Future[HttpResponse] = {
-    httpClientV2
-      .get(url"${notificationsUrl.format(notificationId)}")
-      .transform(
-        _.withRequestTimeout(timeout).withHttpHeaders(("Authorization", config.authToken)))
-      .execute[HttpResponse]
+    withCircuitBreaker[HttpResponse](
+      httpClientV2
+        .get(url"${notificationsUrl.format(notificationId)}")
+        .transform(
+          _.withRequestTimeout(timeout).withHttpHeaders(("Authorization", config.verificationConfig.authToken)))
+        .execute[HttpResponse]
+    )
   }
+
+  override def configCB: CircuitBreakerConfig = config.verificationConfig.cbConfig
 }

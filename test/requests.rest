@@ -1,15 +1,25 @@
-### VALID
-POST http://localhost:8080/customer-insight-platform/email/validate-format
+### Verify
+POST http://localhost:6181/customer-insight-platform/email/verify
 content-type: application/json
+Authorization: fake-token
 
 {
-  "email" : "w@sad.com"
+  "email" : "test@test.com"
 }
 
-### INVALID
-POST http://localhost:8080/customer-insight-platform/email/validate-format
+### Verify Passcode
+POST http://localhost:6183/customer-insight-platform/email/verify/passcode
 content-type: application/json
+Authorization: fake-token
 
 {
-"email" : "sad.com"
+  "email" : "test1@test.com",
+  "passcode":"EFMFGZ"
 }
+
+
+### Notifications
+GET http://localhost:6183/customer-insight-platform/email/notifications/ecf20f0a-86af-4ebf-9012-e48bc6a31174
+content-type: application/json
+Authorization: fake-token
+

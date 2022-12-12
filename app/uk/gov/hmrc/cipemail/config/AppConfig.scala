@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 HM Revenue & Customs
+ * Copyright 2023 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,10 +23,8 @@ import javax.inject.{Inject, Singleton}
 @Singleton
 class AppConfig @Inject()(config: Configuration) {
 
-  lazy val verifyUrlProtocol: String = config.get[String]("microservice.services.cipemail.verification.protocol")
-  lazy val verifyUrlHost: String = config.get[String]("microservice.services.cipemail.verification.host")
-  lazy val verifyUrlPort: String = config.get[String]("microservice.services.cipemail.verification.port")
-  lazy val authToken: String = config.get[String]("microservice.services.cipemail.verification.auth-token")
-
   lazy val httpTimeout: Long = config.getMillis("http.timeout")
+
+  lazy val verificationConfig: CipVerificationConfig =
+    config.get[CipVerificationConfig]("microservice.services.cipemail.verification")
 }

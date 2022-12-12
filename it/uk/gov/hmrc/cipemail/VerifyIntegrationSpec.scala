@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 HM Revenue & Customs
+ * Copyright 2023 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,6 +16,7 @@
 
 package uk.gov.hmrc.cipemail
 
+import org.apache.commons.lang3.RandomStringUtils
 import org.scalatest.concurrent.{IntegrationPatience, ScalaFutures}
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
@@ -35,12 +36,13 @@ class VerifyIntegrationSpec extends AnyWordSpec
 
   "POST /" should {
     "return 202 with valid email address" in {
+      val emailPrefix = RandomStringUtils.randomAlphabetic(4)
       val response =
         wsClient
           .url(s"$baseUrl/customer-insight-platform/email/verify")
           .withRequestFilter(AhcCurlRequestLogger())
           .withHttpHeaders(("Authorization", "fake-token"))
-          .post(Json.parse("""{"email" : "test@test.com"}"""))
+          .post(Json.parse(s"""{"email" : "$emailPrefix@test.com"}"""))
           .futureValue
 
       response.status shouldBe 202

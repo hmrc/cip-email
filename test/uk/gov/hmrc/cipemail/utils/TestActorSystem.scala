@@ -16,16 +16,15 @@
 
 package uk.gov.hmrc.cipemail.utils
 
-import play.api.mvc.Result
-import play.api.mvc.Results.Status
-import uk.gov.hmrc.http.HttpResponse
+import akka.actor.ActorSystem
+import akka.stream.Materializer
+import org.scalatest.Suite
 
-trait ResultBuilder {
-  def processHttpResponse(response: HttpResponse): Result = {
-    val headers = response.headers.toSeq flatMap {
-      case (parameter, values) =>
-        values map (parameter -> _)
-    }
-    Status(response.status)(response.body).withHeaders(headers: _*)
-  }
+object TestActorSystem {
+  val system: ActorSystem = ActorSystem("test")
+}
+
+trait TestActorSystem { self: Suite =>
+  implicit val system: ActorSystem        = TestActorSystem.system
+  implicit val materializer: Materializer = Materializer(TestActorSystem.system)
 }
