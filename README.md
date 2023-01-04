@@ -48,7 +48,7 @@ For reference here are the details for running each of the services individually
 
 #### Verify
 
-    -XPOST -H "Content-type: application/json" -H "Authorization: U8PVkHDh-1JvQdQBAUwxVkCBomn6tq8Ip6J5xZmBxgb1Kb1HmHANuyAquug5ELLb8iSEHBYwQ"-d '{
+    -XPOST -H "Content-type: application/json" -H "Authorization: U8PVkHDh-1JvQdQBAUwxVkCBomn6tq8Ip6J5xZmBxgb1Kb1HmHANuyAquug5ELLb8iSEHBYwQ" -d '{
 	    "email": "<email>"
     }' 'https://cip-email.protected.mdtp/customer-insight-platform/email/verify'
 
@@ -57,12 +57,12 @@ For reference here are the details for running each of the services individually
     -XGET -H "Content-type: application/json" -H "Authorization: U8PVkHDh-1JvQdQBAUwxVkCBomn6tq8Ip6J5xZmBxgb1Kb1HmHANuyAquug5ELLb8iSEHBYwQ"
     'https://cip-email.protected.mdtp/customer-insight-platform/email/notifications/<notificationId>'
 
-#### Verify OTP
+#### Verify passcode
 
     -XPOST -H "Content-type: application/json" -H "Authorization: U8PVkHDh-1JvQdQBAUwxVkCBomn6tq8Ip6J5xZmBxgb1Kb1HmHANuyAquug5ELLb8iSEHBYwQ" -d '{
 	    "email": "<email>",
-        "otp": "<otp>"
-    }' 'https://cip-email.protected.mdtp/customer-insight-platform/email/verify/otp'
+        "passcode": "<passcode>"
+    }' 'https://cip-email.protected.mdtp/customer-insight-platform/email/verify/passcode'
 
 ### License
 
