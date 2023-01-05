@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 HM Revenue & Customs
+ * Copyright 2023 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,6 +24,8 @@ import play.api.libs.json.Json
 import play.api.libs.ws.WSClient
 import play.api.libs.ws.ahc.AhcCurlRequestLogger
 
+import scala.util.Random
+
 class VerifyIntegrationSpec extends AnyWordSpec
   with Matchers
   with ScalaFutures
@@ -33,6 +35,8 @@ class VerifyIntegrationSpec extends AnyWordSpec
   private val wsClient = app.injector.instanceOf[WSClient]
   private val baseUrl = s"http://localhost:$port"
 
+  private val emailRandomizer = Random.alphanumeric.take(10).mkString
+
   "POST /" should {
     "return 202 with valid email address" in {
       val response =
@@ -40,7 +44,7 @@ class VerifyIntegrationSpec extends AnyWordSpec
           .url(s"$baseUrl/customer-insight-platform/email/verify")
           .withRequestFilter(AhcCurlRequestLogger())
           .withHttpHeaders(("Authorization", "fake-token"))
-          .post(Json.parse("""{"email" : "test@test.com"}"""))
+          .post(Json.parse(s"""{"email" : "$emailRandomizer@test.com"}"""))
           .futureValue
 
       response.status shouldBe 202
