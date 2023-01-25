@@ -1,0 +1,15 @@
+{
+  "scopes": [],
+  "api": {
+    "name": "CIP email Open API Example",
+    "description": "This is an API that allows an email to be verified.  It also provides a status API to check the status of a previous verify request.",
+    "context": "/customer-insight-platform/email",
+    "versions": [
+      {
+        "version": "1.0",
+        "status": "STABLE",
+        "endpointsEnabled": true
+      }
+    ]
+  }
+}

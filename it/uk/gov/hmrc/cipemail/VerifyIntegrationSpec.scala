@@ -16,7 +16,6 @@
 
 package uk.gov.hmrc.cipemail
 
-import org.apache.commons.lang3.RandomStringUtils
 import org.scalatest.concurrent.{IntegrationPatience, ScalaFutures}
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
@@ -24,6 +23,8 @@ import org.scalatestplus.play.guice.GuiceOneServerPerSuite
 import play.api.libs.json.Json
 import play.api.libs.ws.WSClient
 import play.api.libs.ws.ahc.AhcCurlRequestLogger
+
+import scala.util.Random
 
 class VerifyIntegrationSpec extends AnyWordSpec
   with Matchers
@@ -34,15 +35,16 @@ class VerifyIntegrationSpec extends AnyWordSpec
   private val wsClient = app.injector.instanceOf[WSClient]
   private val baseUrl = s"http://localhost:$port"
 
+  private val emailRandomizer = Random.alphanumeric.take(10).mkString
+
   "POST /" should {
     "return 202 with valid email address" in {
-      val emailPrefix = RandomStringUtils.randomAlphabetic(4)
       val response =
         wsClient
           .url(s"$baseUrl/customer-insight-platform/email/verify")
           .withRequestFilter(AhcCurlRequestLogger())
           .withHttpHeaders(("Authorization", "fake-token"))
-          .post(Json.parse(s"""{"email" : "$emailPrefix@test.com"}"""))
+          .post(Json.parse(s"""{"email" : "$emailRandomizer@test.com"}"""))
           .futureValue
 
       response.status shouldBe 202

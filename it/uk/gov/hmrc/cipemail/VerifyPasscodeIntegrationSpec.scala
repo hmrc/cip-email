@@ -24,6 +24,8 @@ import play.api.libs.json.Json
 import play.api.libs.ws.ahc.AhcCurlRequestLogger
 import uk.gov.hmrc.cipemail.utils.DataSteps
 
+import scala.util.Random
+
 class VerifyPasscodeIntegrationSpec
   extends AnyWordSpec
     with Matchers
@@ -32,9 +34,11 @@ class VerifyPasscodeIntegrationSpec
     with GuiceOneServerPerSuite
     with DataSteps {
 
+  private val emailRandomizer = Random.alphanumeric.take(10).mkString
+
   "verify/passcode" should {
     "respond with 200 verified status with valid email and passcode" in {
-      val email = "test@test.com"
+      val email = s"$emailRandomizer@test.com"
       //generate passcode
       verify(email).futureValue
 
@@ -65,7 +69,7 @@ class VerifyPasscodeIntegrationSpec
     // we know there is one for test@test.com
     // as the same email is used above
     "respond with 200 not verified status with non-matching passcode" in {
-      val email = "test@test.com"
+      val email = s"$emailRandomizer@test.com"
       //verify passcode (sut)
       val response =
         wsClient
