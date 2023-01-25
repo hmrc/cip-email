@@ -33,7 +33,7 @@ import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.http.test.{HttpClientV2Support, WireMockSupport}
 
 import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.duration.Duration
+import scala.concurrent.duration.{Duration, DurationInt}
 
 class VerifyConnectorSpec extends AnyWordSpec
   with Matchers
@@ -114,16 +114,12 @@ class VerifyConnectorSpec extends AnyWordSpec
   trait SetUp {
 
     implicit val hc: HeaderCarrier = HeaderCarrier()
-    val cbConfigData = CircuitBreakerConfig("", 5, 5.toDuration, 30.toDuration, 5.toDuration, 1, 0)
-    implicit class IntToDuration(timeout: Int) {
-      def toDuration = Duration(timeout, java.util.concurrent.TimeUnit.SECONDS)
-    }
+    val cbConfigData = CircuitBreakerConfig("", 5, 5.seconds, 30.seconds, 5.seconds, 1, 0)
 
     protected val appConfigMock = mock[AppConfig]
 
-    when(appConfigMock.verificationConfig).thenReturn(CipVerificationConfig(
-      "http", wireMockHost, wireMockPort, "fake-token", cbConfigData))
-
+    appConfigMock.verificationConfig returns CipVerificationConfig(
+      "http", wireMockHost, wireMockPort, "fake-token", cbConfigData)
 
     val verifyConnector = new VerifyConnector(httpClientV2, appConfigMock)
   }
