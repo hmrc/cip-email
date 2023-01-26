@@ -18,6 +18,8 @@ package uk.gov.hmrc.cipemail.connectors
 
 import com.github.tomakehurst.wiremock.client.WireMock._
 import org.mockito.IdiomaticMockito
+import org.mockito.Mockito.when
+import org.mockito.MockitoSugar.mock
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
@@ -25,18 +27,21 @@ import play.api.Configuration
 import play.api.http.Status.OK
 import play.api.libs.json.Json
 import play.api.test.Helpers.{await, defaultAwaitTimeout}
-import uk.gov.hmrc.cipemail.config.AppConfig
+import uk.gov.hmrc.cipemail.config.{AppConfig, CipVerificationConfig, CircuitBreakerConfig}
+import uk.gov.hmrc.cipemail.utils.TestActorSystem
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.http.test.{HttpClientV2Support, WireMockSupport}
 
 import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.duration.{Duration, DurationInt}
 
 class VerifyConnectorSpec extends AnyWordSpec
   with Matchers
   with WireMockSupport
   with ScalaFutures
   with HttpClientV2Support
-  with IdiomaticMockito {
+  with IdiomaticMockito
+  with TestActorSystem {
 
   "verify" should {
     val url: String = "/customer-insight-platform/email/verify"
@@ -109,14 +114,13 @@ class VerifyConnectorSpec extends AnyWordSpec
   trait SetUp {
 
     implicit val hc: HeaderCarrier = HeaderCarrier()
+    val cbConfigData = CircuitBreakerConfig("", 5, 5.seconds, 30.seconds, 5.seconds, 1, 0)
 
-    private val appConfig = new AppConfig(Configuration.from(Map(
-      "http.timeout" -> 30000,
-      "microservice.services.cipemail.verification.host" -> wireMockHost,
-      "microservice.services.cipemail.verification.port" -> wireMockPort,
-      "microservice.services.cipemail.verification.protocol" -> "http",
-      "microservice.services.cipemail.verification.auth-token" -> "fake-token")))
+    protected val appConfigMock = mock[AppConfig]
 
-    val verifyConnector = new VerifyConnector(httpClientV2, appConfig)
+    appConfigMock.verificationConfig returns CipVerificationConfig(
+      "http", wireMockHost, wireMockPort, "fake-token", cbConfigData)
+
+    val verifyConnector = new VerifyConnector(httpClientV2, appConfigMock)
   }
 }
